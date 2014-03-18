@@ -9,11 +9,6 @@
 #include <string.h>
 #include <netdb.h>
 
-#define TAILLE 100
-char *motcle[TAILLE];
-int place=100;
-
-
 int initSocketClient(char *host, short port){
   int sock, val;
   struct sockaddr_in serv; //ma structure d'adresse pour le serveur
@@ -45,27 +40,35 @@ int initSocketClient(char *host, short port){
 
 
 void Alerte(int sock){
-  write(sock,"A",1);
-  char reponse[50];
-  char r;
-  bool ajout=true;
-  while(ajout){
-     printf("Voulez-vous ajouter un processus a la liste ?(o/n)\n");
-     r=read(sock,reponse,49);
-     if(r=='o'){
-       printf("Nom du processus ?\n");
-       r=read(sock,reponse,49);
-       motcle[TAILLE-place]=r;       
-     }
-     else{
-       ajout=false;
-     }
+  write(sock,"A",1);  //On écrit le 1er A 
+  int i=0;     //Pour parcourir le buf lors du fgets
+  FILE * fp;   //Pour contenir le popen
+  char * msg;  //Pour contenir la commande qui selectionne la liste des processus
+  char buf[5]; //Pour lire le résultat du fgets
+
+  asprintf(&msg,"ps -e | grep -w \"firefox\" | cut -d\":\" -f3 | cut -d\" \" -f2 | wc -l");   //juste firefox pour le moment
+  fp=popen(msg,"r");
+  if (fp == NULL) return -1;
+  while( fgets(buf,sizeof buf,fp) != NULL ) {
+    if(buf[i]!='0'){
+      write(sock,"Firefox",7);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
+    }
   }
-  system("ps -e|     ");
+  pclose(fp); //On ferme le popen
 }
 
 void Controle(int sock,char * com){
   write(sock,"C",1);
+  FILE * pf;
+  char * buf;
+  char * msg;
+
+  asprintf(&msg,com);        // On execute la commande en parametre
+  pf = popen(msg,"r");     
+  if (pf == NULL ) return -1;
+  fscanf(pf, "%s", buf);     // On recupere le résultat de la commande
+  printf("%s",buf);         // Sa n'affiche pas le résultat en entier
+  pclose(pf);              // On ferme le popen
 }
 
 void Message(int sock,char * mes){
