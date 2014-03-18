@@ -9,6 +9,11 @@
 #include <string.h>
 #include <netdb.h>
 
+#define TAILLE 100
+char *motcle[TAILLE];
+int place=100;
+
+
 int initSocketClient(char *host, short port){
   int sock, val;
   struct sockaddr_in serv; //ma structure d'adresse pour le serveur
@@ -35,31 +40,42 @@ int initSocketClient(char *host, short port){
   return sock;
 }
 
-void GetReponse(int sock){
-  char reponse[1000];
-  int i;
-  i=read(sock,reponse,999);
-  reponse[i]=0;
-  printf("%s\n",reponse);
-}
-
 //pour la fonction system:  system("lacommande");
 //Screen: DISPLAY=;0.0 import -window root screenshot.jpg
 
-void alerte(){}
 
-void controle(int sock,char *com){
-  system(com);
-  GetReponse(sock);
+void Alerte(int sock){
+  write(sock,"A",1);
+  char reponse[50];
+  char r;
+  bool ajout=true;
+  while(ajout){
+     printf("Voulez-vous ajouter un processus a la liste ?(o/n)\n");
+     r=read(sock,reponse,49);
+     if(r=='o'){
+       printf("Nom du processus ?\n");
+       r=read(sock,reponse,49);
+       motcle[TAILLE-place]=r;       
+     }
+     else{
+       ajout=false;
+     }
+  }
+  system("ps -e|     ");
 }
 
-void message(int sock,char *mes){
-  int l=htonl(strlen(mes));
-  write(sock,mes,l);
+void Controle(int sock,char * com){
+  write(sock,"C",1);
 }
 
-void visuelle(){}
+void Message(int sock,char * mes){
+  write(sock,"M",1);
+  write(sock,mes,strlen(mes));
+}
 
+void Visuelle(int sock){
+  write(sock,"V",1);
+}
 
 int main(int args, char *arg[]){
 
