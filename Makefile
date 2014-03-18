@@ -1,9 +1,12 @@
-all : Master
+all : Master Controleur
 Master: Master.o
-	gcc -o $@ $^ -lpthread
+	gcc -g -o $@ $^ -lpthread
+
+Controleur: Controleur.o
+	gcc -g -o $@ $^ -lpthread
 
 %.o : %.c
-	gcc -c $< -lpthread
+	gcc -g -c $< -lpthread
 
 clean:
-	rm *~ Master
+	rm *~ Master *.o Controleur

@@ -12,6 +12,11 @@
 #include <signal.h>
 #include <time.h>
 
+
+struct client_t{
+  int sock;
+};
+
 struct spy_t{
   char * hote;
   int sock;
@@ -19,14 +24,17 @@ struct spy_t{
 
 struct controleur_t{
   int numSalle;
-  int sock;
   struct spy_t * lesSpy;
-  pthread_mutex_t *verrou;
-  pthread_t th;
+  int sock;
 };
 
+struct controlleur_t{
+  
+};
+
+
 int lireEntier(int client){
-  char c; //c initialisé a n'importe quoi sauf \n
+  char * msg, c; //c initialisé a n'importe quoi sauf \n
   printf("%d\n", c);
   read(client, &c, 1);
   return atoi(msg);
@@ -58,20 +66,23 @@ int initSocketServeur(short port){
   return sock;
 }
 
-void * gereObserveur(){
+void * gereObserveur(int cli){
   
 }
 
-void * gereControleur(){
-  
+void * gereControleur(int cli){
 }
 
-void * gereConnection(){
-  int codeClient=lireEntier(sock); //recupere le type du client
+void * gereConnection(void* arg){
+  struct client_t * aux=(struct client_t *) arg;
+  int codeClient;
+  read(aux->sock,&codeClient,4);
+  codeClient=ntohl(codeClient); //recupere le type du client
   
-  if(codeClient==0) gereControleur();
-  if(codeClient)
-    }
+  if(codeClient==0) gereControleur(aux->sock);
+  if(codeClient==1) gereObserveur(aux->sock);
+
+}
 
 int main(int args, char *arg[]){
   //initialisation du serveur
@@ -89,12 +100,13 @@ int main(int args, char *arg[]){
   
   int client; //descripteur pour le client  
   
+  struct client_t *c=(struct client_t *)malloc(sizeof(struct client_t));
   
   //attente de clients puis gestion des requêtes
   while (1) {
     
     client=accept(sock, (struct sockaddr *) &stclient, &taille);
-    pthread_create(&th, NULL, gereConnection, NULL);
+    pthread_create(&th, NULL, gereConnection,(void*)c);
     
   }
   return 0;
