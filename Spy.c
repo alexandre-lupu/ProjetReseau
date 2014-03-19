@@ -39,8 +39,8 @@ int initSocketClient(char *host, short port){
 //Screen: DISPLAY=;0.0 import -window root screenshot.jpg
 
 
-void Alerte(int sock){
-  write(sock,"A",1);  //On écrit le 1er A 
+int Alerte(int sock){
+  //write(sock,"A",1);  //On écrit le 1er A 
   int i=0;     //Pour parcourir le buf lors du fgets
   FILE * fp;   //Pour contenir le popen
   char * msg;  //Pour contenir la commande qui selectionne la liste des processus
@@ -51,13 +51,13 @@ void Alerte(int sock){
   if (fp == NULL) return -1;
   while( fgets(buf,sizeof buf,fp) != NULL ) {
     if(buf[i]!='0'){
-      write(sock,"Firefox",7);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
+      write(sock,"AFirefox",8);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
     }
   }
   pclose(fp); //On ferme le popen
 }
 
-void Controle(int sock,char * com){
+int Controle(int sock,char * com){
   write(sock,"C",1);
   FILE * pf;
   char * buf;
@@ -87,6 +87,7 @@ int main(int args, char *arg[]){
   sock=initSocketClient(arg[1], atoi(arg[2]));
   if (sock==-1) return -1; //en cas d'echec de l'initialisation
   
+  Alerte(sock);
 
   close(sock);
   return 0;

@@ -20,6 +20,16 @@ struct spy_t{
   pthread_mutex_t *verrou;
 };
 
+int initSocketClient(char * host, short port){
+  int sock, val;
+  struct sockaddr_in serv;
+  sock = socket(AF_INET, SOCK_STREAM, 0);
+  if(sock==-1){
+    printf("Erreur d'utilisation socket\n");
+    return -1;
+  }
+}
+
 int initSocketServeur(short port){
   int sock, val;
   struct sockaddr_in stad; //ma structure d'adresse pour le serveur
@@ -58,6 +68,18 @@ int lireChaine(int client,char *buff,int max){
   return strlen(buff);
 }
 
+char * lireMessage(int client, char* buff, int max){
+    char c='a'; //c initialisé a n'importe quoi sauf \n
+    int i=0;
+
+    while ((c!='\n')&&(i<max)) {
+      read(client, &c, 1);
+      if ((c!='\n')&&(c!='\r')) buff[i++]=c;
+    }
+    buff[i]=0;
+    return buff;
+}
+
 void *gere_sig(int sig, siginfo_t * info,void *ucontext){
   printf("Signal Recu \n");
   return NULL;
@@ -87,30 +109,35 @@ void * gereClient(void *arg){
       if (par->sock_spy[i]>fdMax) fdMax=par->sock_spy[i];
     pthread_mutex_unlock(par->verrou);
     fdMax++;
-    printf("Nb Client : %d, fdMax : %d\n",*(par->nb_spy),fdMax);
+    
+    //printf("Nb Client : %d, fdMax : %d\n",*(par->nb_spy),fdMax);
+    
     //attente d'un changement sur des descripteur des clients connectés
     //cad attente d'un message ou d'une deconnection
     n=select(fdMax, &fd, NULL, NULL, NULL);
-    printf("Retour select : %d\n", n);
+    
+    //printf("Retour select : %d\n", n);
+    
     //quels sont les clients qui envoient qqchose ou se deco ?
     pthread_mutex_lock(par->verrou); 
     if(n>0) for(i=0;i<*(par->nb_spy);i++)
-      if(FD_ISSET((*par).sock_spy[i], &fd)){
-	printf("Tentative de lecture...\n");
-	n=read(par->sock_spy[i],&code,1);
-   
-	if (n==0) {
-	  //client vient de se deconnecter
-	}
-	
-	if(code=='A'){
-	  printf("Appli non autorisée detectée\n");
-	  n=lireChaine(par->sock_spy[i],buffer,1000);
-	  printf("Processus detecté : %s\n", buffer);
-	}
-	if(code=='C'){}
-	if(code=='V'){}
-      }
+	      
+	      if(FD_ISSET((*par).sock_spy[i], &fd)){
+		//printf("Tentative de lecture...\n");
+		n=read(par->sock_spy[i],&code,1);
+		
+		//if (n==0) {
+		  //client vient de se deconnecter
+		//}
+		
+		if(code=='A'){
+		  printf("Appli non autorisée detectée\n");
+		  n=/*lireMessage(par->sock_spy[i], buffer, 999);*/ read(par->sock_spy[i],buffer,999);
+		  printf("Processus detecté : %s\n", buffer);
+		}
+		if(code=='C'){}
+		if(code=='V'){}
+	      }
     pthread_mutex_unlock(par->verrou);
   }
 }
@@ -124,7 +151,9 @@ int main(int args,char *arg[]){
   if (sock==-1) return -1;
   struct sockaddr_in stclient;
   socklen_t taille=sizeof(struct sockaddr_in);
-  int client;
+  int client, serveur;
+
+  //serveur=InitSocketClient(/*host*/, atoi("9999"));
 
   //initialise verrou
   pthread_mutex_init(&verr,NULL);

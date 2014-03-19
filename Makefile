@@ -1,5 +1,8 @@
-all : Master Controleur
+all : Master Controleur Spy
 Master: Master.o
+	gcc -g -o $@ $^ -lpthread
+
+Spy: Spy.o
 	gcc -g -o $@ $^ -lpthread
 
 Controleur: Controleur.o
