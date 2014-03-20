@@ -39,8 +39,8 @@ int initSocketClient(char *host, short port){
 //Screen: DISPLAY=;0.0 import -window root screenshot.jpg
 
 
-int Alerte(int sock){
-  //write(sock,"A",1);  //On écrit le 1er A 
+int Alerte(int sock){ //Je dois changer de place le write du 1er A sinon sa fait ouvrir le serveur pour rien un dialogue de processus detecté...
+  write(sock,"A",1);  //On écrit le 1er A 
   int i=0;     //Pour parcourir le buf lors du fgets
   FILE * fp;   //Pour contenir le popen
   char * msg;  //Pour contenir la commande qui selectionne la liste des processus
@@ -51,7 +51,7 @@ int Alerte(int sock){
   if (fp == NULL) return -1;
   while( fgets(buf,sizeof buf,fp) != NULL ) {
     if(buf[i]!='0'){
-      write(sock,"AFirefox",8);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
+      write(sock,"Firefox",8);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
     }
   }
   pclose(fp); //On ferme le popen
@@ -63,7 +63,7 @@ int Controle(int sock,char * com){
   char * buf;
   char * msg;
 
-  asprintf(&msg,com);        // On execute la commande en parametre
+  asprintf(&msg,"%s",com);        // On execute la commande en parametre
   pf = popen(msg,"r");     
   if (pf == NULL ) return -1;
   fscanf(pf, "%s", buf);     // On recupere le résultat de la commande
