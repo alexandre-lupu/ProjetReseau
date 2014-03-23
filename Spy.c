@@ -53,27 +53,40 @@ int Alerte(int sock){ //Je dois changer de place le write du 1er A sinon sa fait
     if(buf[i]!='0'){
       write(sock,"Firefox",8);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
     }
+    else{
+      write(sock,"Non",4);  //Si on detecte pas le programme on renvoit Non
+    }
   }
   pclose(fp); //On ferme le popen
 }
 
+
 int Controle(int sock,char * com){
-  write(sock,"C",1);
+  write(sock,"C",1);            //On écrit un C pour être dans la partie controle dans le Controleur.c
   FILE * pf;
-  char * buf;
   char * msg;
 
   asprintf(&msg,"%s",com);        // On execute la commande en parametre
-  pf = popen(msg,"r");     
-  if (pf == NULL ) return -1;
-  fscanf(pf, "%s", buf);     // On recupere le résultat de la commande
-  printf("%s",buf);         // Sa n'affiche pas le résultat en entier
-  pclose(pf);              // On ferme le popen
+  pf = popen(msg,"r");            // On recupére le résultat en popen dans pf
+  if (pf == NULL) return -1;
+   
+  char * str2=malloc(sizeof(*str2));  //On alloue la mémoire de str2 pour pouvoir récuperer mot à mot les résultats
+  char * str3="";                     //str3 contient le résultat
+
+  while(fscanf(pf,"%s",str2) != EOF){    //Tant que le fichier pf n'est pas vide
+    asprintf(&str3,"%s %s",str3,str2);   //On récupere le résultat de la commande
+  }
+
+  write(sock,str3,strlen(str3));   //On renvoit le résultat de la commande
+
+  pclose(pf);
 }
 
+
 void Message(int sock,char * mes){
-  write(sock,"M",1);
-  write(sock,mes,strlen(mes));
+  //write(sock,"M",1);
+  //write(sock,mes,strlen(mes));
+  printf("%s",mes);
 }
 
 void Visuelle(int sock){
@@ -88,6 +101,8 @@ int main(int args, char *arg[]){
   if (sock==-1) return -1; //en cas d'echec de l'initialisation
   
   Alerte(sock);
+  Controle(sock,"date");
+  Message(sock,"Ceci est le test de la fonction Message ! \n");
 
   close(sock);
   return 0;

@@ -131,13 +131,17 @@ void * gereClient(void *arg){
 		//}
 		
 		if(code=='A'){
-		  printf("Appli non autorisée detectée\n");
+		  //printf("Appli non autorisée detectée\n");
 		  /*lireMessage(par->sock_spy[i], buffer, 999);*/ read(par->sock_spy[i],&buffer,999); // j'ai enlevé le n=read...
 		  printf("Processus detecté : %s\n", buffer);
-		  code='J'; // Faudrait plutot faire un switch car sinon quand on fait un client (./Spy localhost 9999) le code reste a A et ne change plus de valeur => J'ai mis 'J' pour sortir de la boucle, mais sinon ca fonctionne si tu as un firefox d'ouvert il le notifie
 		}
-		if(code=='C'){}
+		if(code=='C'){
+		  printf("Resultat de la commande : \n");
+		  read(par->sock_spy[i],&buffer,999);
+		  printf("%s \n", buffer);
+		}
 		if(code=='V'){}
+		code='J'; // Faudrait plutot faire un switch car sinon quand on fait un client (./Spy localhost 9999) le code reste a A et ne change plus de valeur => J'ai mis 'J' pour sortir de la boucle, mais sinon ca fonctionne si tu as un firefox d'ouvert il le notifie
 	      }
     pthread_mutex_unlock(par->verrou);
   }
