@@ -28,9 +28,6 @@ struct controleur_t{
   int sock;
 };
 
-struct controlleur_t{
-  
-};
 
 
 int lireEntier(int client){
@@ -66,11 +63,12 @@ int initSocketServeur(short port){
   return sock;
 }
 
-void * gereObserveur(int cli){
+void gereObserveur(int cli){
   
 }
 
-void * gereControleur(int cli){
+void gereControleur(int cli){
+  printf("connexion d'un controleur\n");
 }
 
 void * gereConnection(void* arg){
@@ -106,6 +104,7 @@ int main(int args, char *arg[]){
   while (1) {
     
     client=accept(sock, (struct sockaddr *) &stclient, &taille);
+    printf("Connexion d'un client");
     pthread_create(&th, NULL, gereConnection,(void*)c);
     
   }

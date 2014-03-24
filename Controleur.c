@@ -11,6 +11,8 @@
 #include <pthread.h>
 #include <signal.h>
 #include <time.h>
+#include <errno.h>
+
 
 #define MAX_CLI 40
 
@@ -19,6 +21,11 @@ struct spy_t{
   int *sock_spy;
   pthread_mutex_t *verrou;
 };
+
+struct serveur_t{
+  int sock;
+};
+
 
 int initSocketClient(char * host, short port){
   int sock, val;
@@ -148,21 +155,38 @@ void * gereClient(void *arg){
 }
 
 
+void * connexionMaster(void * param){
+  int id=htonl(0);
+  struct serveur_t *master=(struct serveur_t *)param;
+  printf("Connexion au master.\n");
+  write(master->sock,&id,4);
+}
+
+
 int main(int args,char *arg[]){
-  pthread_t th1;
+  pthread_t th1, th2;
   pthread_mutex_t verr;
   int sock ,nb_spy=0,sock_spy[MAX_CLI];
+
   sock=initSocketServeur(atoi(arg[1]));
   if (sock==-1) return -1;
-  struct sockaddr_in stclient;
-  socklen_t taille=sizeof(struct sockaddr_in);
-  int client, serveur;
 
-  //serveur=InitSocketClient(/*host*/, atoi("9999"));
+  int client, serveur;
+  
+  serveur=initSocketClient(arg[2],9090);
+  if(serveur==-1) return -1;
+  struct serveur_t * serv=(struct serveur_t *)malloc(sizeof(struct serveur_t));
+  serv->sock=serveur;
+  connexionMaster((void*)serv);
 
   //initialise verrou
   pthread_mutex_init(&verr,NULL);
 
+
+
+  struct sockaddr_in stclient;
+  socklen_t taille=sizeof(struct sockaddr_in);
+  
   struct spy_t *p=(struct spy_t *)malloc(sizeof(struct spy_t));
   (*p).nb_spy=&nb_spy;
   (*p).sock_spy=sock_spy;
@@ -171,13 +195,17 @@ int main(int args,char *arg[]){
 
   while(1){
     client=accept(sock, (struct sockaddr *) &stclient,&taille);
+    
     struct hostent *h;
     h=gethostbyaddr((void *)&stclient.sin_addr.s_addr, 4, AF_INET);
+   
     printf("Un client vient de se connecter : %s\n", h->h_name);
     pthread_mutex_lock(&verr);
     sock_spy[nb_spy++]=client;
     pthread_mutex_unlock(&verr);
+
     pthread_kill(th1, SIGUSR1);
   }
+
   return 0;
 }

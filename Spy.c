@@ -117,11 +117,10 @@ int main(int args, char *arg[]){
   processus[1]="emacs";
   int nb_processus=2;   //Pour avoir le nombre de case utilisé dans le tableau de processus
   //Si tu veux ajouter des processus oublie pas d'incrementer
-
+  
   Alerte(sock,processus,nb_processus);
   Controle(sock,"date");
   Message(sock,"Ceci est le test de la fonction Message ! \n");
-
   close(sock);
   return 0;
 }
