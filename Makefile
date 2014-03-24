@@ -12,4 +12,4 @@ Controleur: Controleur.o
 	gcc -g -c $< -lpthread
 
 clean:
-	rm *~ Master *.o Controleur
+	rm *~ Master *.o Controleur Spy

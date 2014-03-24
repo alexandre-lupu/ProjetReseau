@@ -39,25 +39,37 @@ int initSocketClient(char *host, short port){
 //Screen: DISPLAY=;0.0 import -window root screenshot.jpg
 
 
-int Alerte(int sock){ //Je dois changer de place le write du 1er A sinon sa fait ouvrir le serveur pour rien un dialogue de processus detecté...
-  write(sock,"A",1);  //On écrit le 1er A 
+int Alerte(int sock,char * processus[],int nb_processus){
+  write(sock,"A",1);
+  int alerte=1;  //Tant que c'est vrai on continue la recherche
+  int j;
   int i=0;     //Pour parcourir le buf lors du fgets
   FILE * fp;   //Pour contenir le popen
   char * msg;  //Pour contenir la commande qui selectionne la liste des processus
   char buf[5]; //Pour lire le résultat du fgets
 
-  asprintf(&msg,"ps -e | grep -w \"firefox\" | cut -d\":\" -f3 | cut -d\" \" -f2 | wc -l");   //juste firefox pour le moment
-  fp=popen(msg,"r");
-  if (fp == NULL) return -1;
-  while( fgets(buf,sizeof buf,fp) != NULL ) {
-    if(buf[i]!='0'){
-      write(sock,"Firefox",8);   //Si il y a firefox on l'ecrit dans la socket avec le format "A-------"
+  while(alerte){
+    for(j=0 ;j<nb_processus ; j++){
+      asprintf(&msg,"ps -e | grep -w '%s' | cut -d\":\" -f3 | cut -d\" \" -f2 | wc -l",processus[j]);
+      
+      fp=popen(msg,"r");
+      
+      if (fp == NULL) return -1;
+      
+      while( fgets(buf,sizeof buf,fp) != NULL) {
+	if(buf[i]!='0'){
+	  //printf("%s \n",processus[j]);
+	  alerte=0;
+	  write(sock,processus[j],sizeof(processus[j]));
+	  j=nb_processus;
+	}
+	i++;
+      }
+      i=0;
+      pclose(fp);
     }
-    else{
-      write(sock,"Non",4);  //Si on detecte pas le programme on renvoit Non
-    }
+    j=0;
   }
-  pclose(fp); //On ferme le popen
 }
 
 
@@ -100,7 +112,13 @@ int main(int args, char *arg[]){
   sock=initSocketClient(arg[1], atoi(arg[2]));
   if (sock==-1) return -1; //en cas d'echec de l'initialisation
   
-  Alerte(sock);
+  char * processus[10];
+  processus[0]="firefox";
+  processus[1]="emacs";
+  int nb_processus=2;   //Pour avoir le nombre de case utilisé dans le tableau de processus
+  //Si tu veux ajouter des processus oublie pas d'incrementer
+
+  Alerte(sock,processus,nb_processus);
   Controle(sock,"date");
   Message(sock,"Ceci est le test de la fonction Message ! \n");
 
