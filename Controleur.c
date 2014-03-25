@@ -35,7 +35,20 @@ int initSocketClient(char * host, short port){
     printf("Erreur d'utilisation socket\n");
     return -1;
   }
+  struct hostent * info;
+  info=gethostbyname(host);
+  serv.sin_family = AF_INET;
+  serv.sin_addr.s_addr = *((uint32_t *)info->h_addr);
+  serv.sin_port = htons(port);
+  
+  val=connect(sock, (struct sockaddr *) &serv, sizeof(serv));
+  if(val==-1){
+    printf("Erreur d'utilisation connect\n");
+    return -1;
+  }
+  return sock;  
 }
+
 
 int initSocketServeur(short port){
   int sock, val;
@@ -63,6 +76,9 @@ int initSocketServeur(short port){
   return sock;
 }
 
+
+
+
 int lireChaine(int client,char *buff,int max){
   char c='a';
   int i=0, n;
@@ -75,22 +91,30 @@ int lireChaine(int client,char *buff,int max){
   return strlen(buff);
 }
 
-char * lireMessage(int client, char* buff, int max){
-    char c='a'; //c initialisé a n'importe quoi sauf \n
-    int i=0;
 
-    while ((c!='\n')&&(i<max)) {
-      read(client, &c, 1);
-      if ((c!='\n')&&(c!='\r')) buff[i++]=c;
-    }
-    buff[i]=0;
-    return buff;
+
+char * lireMessage(int client, char* buff, int max){
+  char c='a'; //c initialisé a n'importe quoi sauf \n
+  int i=0;
+
+  while ((c!='\n')&&(i<max)) {
+    read(client, &c, 1);
+    if ((c!='\n')&&(c!='\r')) buff[i++]=c;
+  }
+  buff[i]=0;
+  return buff;
 }
+
+
+
 
 void *gere_sig(int sig, siginfo_t * info,void *ucontext){
   printf("Signal Recu \n");
   return NULL;
 }
+
+
+
 
 void * gereClient(void *arg){
   struct spy_t *par=(struct spy_t *)arg;
@@ -108,7 +132,7 @@ void * gereClient(void *arg){
   while(1){
     //Construction des descripteur
     FD_ZERO(&fd);
-    for (i=0; i<*(par->nb_spy); i++) FD_SET(par->sock_spy[i], &fd);
+    for (i=0; i<(*par->nb_spy); i++) FD_SET(par->sock_spy[i], &fd);
     //Recherche de la valeur max des descripteur
     fdMax=0;
     pthread_mutex_lock(par->verrou);
@@ -134,7 +158,7 @@ void * gereClient(void *arg){
 		read(par->sock_spy[i],&code,1); // J'ai enlevé le n=read...
 		
 		//if (n==0) {
-		  //client vient de se deconnecter
+		//client vient de se deconnecter
 		//}
 		
 		if(code=='A'){
@@ -158,9 +182,12 @@ void * gereClient(void *arg){
 void * connexionMaster(void * param){
   int id=htonl(0);
   struct serveur_t *master=(struct serveur_t *)param;
-  printf("Connexion au master.\n");
   write(master->sock,&id,4);
+  printf("Connexion au master.\n");
+  while(1){}
 }
+
+
 
 
 int main(int args,char *arg[]){
@@ -168,30 +195,30 @@ int main(int args,char *arg[]){
   pthread_mutex_t verr;
   int sock ,nb_spy=0,sock_spy[MAX_CLI];
 
-  sock=initSocketServeur(atoi(arg[1]));
+  sock=initSocketServeur(atoi(arg[2]));
   if (sock==-1) return -1;
 
   int client, serveur;
   
-  serveur=initSocketClient(arg[2],9090);
+  serveur=initSocketClient(arg[1],9090);
   if(serveur==-1) return -1;
   struct serveur_t * serv=(struct serveur_t *)malloc(sizeof(struct serveur_t));
   serv->sock=serveur;
-  connexionMaster((void*)serv);
+  pthread_create(&th2, NULL, connexionMaster, (void*)serv);
+  
 
   //initialise verrou
   pthread_mutex_init(&verr,NULL);
 
-
-
   struct sockaddr_in stclient;
   socklen_t taille=sizeof(struct sockaddr_in);
-  
+ 
   struct spy_t *p=(struct spy_t *)malloc(sizeof(struct spy_t));
   (*p).nb_spy=&nb_spy;
   (*p).sock_spy=sock_spy;
   (*p).verrou=&verr;
   pthread_create(&th1,NULL,gereClient,(void*)p);
+  
 
   while(1){
     client=accept(sock, (struct sockaddr *) &stclient,&taille);

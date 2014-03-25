@@ -64,7 +64,6 @@ int initSocketServeur(short port){
 }
 
 void gereObserveur(int cli){
-  
 }
 
 void gereControleur(int cli){
@@ -80,7 +79,7 @@ void * gereConnection(void* arg){
   if(codeClient==0) gereControleur(aux->sock);
   if(codeClient==1) gereObserveur(aux->sock);
 
-}
+}  
 
 int main(int args, char *arg[]){
   //initialisation du serveur
@@ -110,7 +109,7 @@ int main(int args, char *arg[]){
   }
   return 0;
 }
-  
+ 
 
 
 
