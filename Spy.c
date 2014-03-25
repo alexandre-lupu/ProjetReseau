@@ -36,7 +36,7 @@ int initSocketClient(char *host, short port){
 }
 
 //pour la fonction system:  system("lacommande");
-//Screen: DISPLAY=;0.0 import -window root screenshot.jpg
+//Screen: DISPLAY=:0.0 import -window root screenshot.jpg
 
 
 int Alerte(int sock,char * processus[],int nb_processus){
@@ -114,7 +114,7 @@ int main(int args, char *arg[]){
   
   char * processus[10];
   processus[0]="firefox";
-  processus[1]="emacs";
+  processus[1]="evince";
   int nb_processus=2;   //Pour avoir le nombre de case utilisé dans le tableau de processus
   //Si tu veux ajouter des processus oublie pas d'incrementer
   

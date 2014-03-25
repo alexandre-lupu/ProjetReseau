@@ -99,12 +99,12 @@ int main(int args, char *arg[]){
   int client; //descripteur pour le client  
   
   struct client_t *c=(struct client_t *)malloc(sizeof(struct client_t));
-  
   //attente de clients puis gestion des requêtes
   while (1) {
     
     client=accept(sock, (struct sockaddr *) &stclient, &taille);
     printf("Connexion d'un client");
+    c->sock=client;
     pthread_create(&th, NULL, gereConnection,(void*)c);
     
   }
