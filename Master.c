@@ -102,7 +102,7 @@ int main(int args, char *arg[]){
   while (1) {
     
     client=accept(sock, (struct sockaddr *) &stclient, &taille);
-    printf("Connexion d'un client");
+    printf("Connexion d'un client \n");
     c->sock=client;
     pthread_create(&th, NULL, gereConnection,(void*)c);
     
