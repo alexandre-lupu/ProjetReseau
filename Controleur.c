@@ -184,6 +184,8 @@ void * connexionMaster(void * param){
   struct serveur_t *master=(struct serveur_t *)param;
   write(master->sock,&id,4);
   printf("Connexion au master.\n");
+  int numSalle=htonl(27);
+  write(master->sock,&numSalle,4);
   while(1){}
 }
 

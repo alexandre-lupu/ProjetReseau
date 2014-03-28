@@ -28,7 +28,8 @@ struct controleur_t{
   int sock;
 };
 
-
+struct controleur_t lesControleurs[50];
+int nbControleurs=0;
 
 int lireEntier(int client){
   char * msg, c; //c initialisé a n'importe quoi sauf \n
@@ -68,6 +69,11 @@ void gereObserveur(int cli){
 
 void gereControleur(int cli){
   printf("connexion d'un controleur\n");
+  struct controleur_t c;
+  c.sock=cli;
+  read(cli, &c.numSalle,4);
+  lesControleurs[nbControleurs];
+  nbControleurs+=1;
 }
 
 void * gereConnection(void* arg){
