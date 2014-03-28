@@ -25,6 +25,10 @@ struct paramC{         //Struct pour le thread de Message
   char * mes;
 };
 
+struct paramD{         //Struct pour le thread de Visuelle
+  int sock;
+};
+
 pthread_mutex_t verrou;
 
 int initSocketClient(char *host, short port){
@@ -71,7 +75,7 @@ void * Alerte(void *par){
   int actif[(*argj).nb_processus];
 
   while(alerte){
-    sleep(30);
+    sleep(30);  //Un Alerte toute les 20 secondes
     pthread_mutex_lock(&verrou);
     //write((*argj).sock,"A",1);
     for(j=0 ;j<(*argj).nb_processus ; j++){
@@ -142,8 +146,16 @@ void * Message(void *par){
   pthread_mutex_unlock(&verrou);
 }
 
-void Visuelle(int sock){
-  write(sock,"V",1);
+void Visuelle(void *par){
+
+  struct paramD *argj=(struct paramD *)par;
+
+  while(1){
+    sleep(60);    //Un screen toute les 60secondes
+    pthread_mutex_lock(&verrou);
+    system("DISPLAY=:0.0 import -window root screenshot.jpg");
+    pthread_mutex_unlock(&verrou);
+  }
 }
 
 int main(int args, char *arg[]){
@@ -160,7 +172,7 @@ int main(int args, char *arg[]){
   int nb_processus=3;                   //Pour avoir le nombre de case utilisé dans le tableau de processus
                                         //Si tu veux ajouter des processus oublie pas d'incrementer
 
-  pthread_t th1,th2,th3;
+  pthread_t th1,th2,th3,th4;
 
   struct paramA *pa=(struct paramA *)malloc(sizeof(struct paramA));
   (*pa).sock=sock; 
@@ -178,15 +190,20 @@ int main(int args, char *arg[]){
   struct paramC *pc=(struct paramC *)malloc(sizeof(struct paramC));
   (*pc).mes=mes;
 
+  struct paramD *pd=(struct paramD *)malloc(sizeof(struct paramD));
+  (*pd).sock=sock;
+
   pthread_mutex_init(&verrou, NULL);
 
   pthread_create(&th1, NULL,Alerte,(void *)pa);
   pthread_create(&th2, NULL,Controle,(void *)pb);
   pthread_create(&th3, NULL,Message,(void *)pc);
+  pthread_create(&th4, NULL,Visuelle,(void *)pd);
 
   pthread_join(th3,NULL);
   pthread_join(th2,NULL);
   pthread_join(th1,NULL);
+  pthread_join(th4,NULL);
   
   pthread_mutex_destroy(&verrou);
 
